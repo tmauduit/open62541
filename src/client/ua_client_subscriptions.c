@@ -124,6 +124,7 @@ UA_Client_Subscriptions_create_async(UA_Client *client, const UA_CreateSubscript
                                     cc, requestId);
 }
 
+
 static UA_Client_Subscription *
 findSubscription(const UA_Client *client, UA_UInt32 subscriptionId) {
     UA_Client_Subscription *sub = NULL;
@@ -133,6 +134,20 @@ findSubscription(const UA_Client *client, UA_UInt32 subscriptionId) {
     }
     return sub;
 }
+
+UA_StatusCode
+UA_Client_Subscriptions_setRawDataChangeCallback(UA_Client *client,
+												 UA_UInt32 subscriptionId,
+												 UA_Client_RawDataChangeNotificationCallback callback)
+{
+    UA_Client_Subscription *sub = findSubscription(client, subscriptionId);
+    if(!sub) {
+	  return UA_STATUSCODE_BADSUBSCRIPTIONIDINVALID;
+    }
+	sub->dataChangeCallback = callback;
+	return UA_STATUSCODE_GOOD;
+}
+
 
 static void
 __Subscriptions_modify_handler(UA_Client *client, void *data, UA_UInt32 requestId, void *r) {
@@ -969,6 +984,12 @@ UA_Client_Subscriptions_nextSequenceNumber(UA_UInt32 sequenceNumber) {
 static void
 processDataChangeNotification(UA_Client *client, UA_Client_Subscription *sub,
                               UA_DataChangeNotification *dataChangeNotification) {
+	if (sub->dataChangeCallback != NULL) {
+		/* if a user defined processDataChangeNotification callback exists, submit
+		 * the dataChangeNotification to it instead of the default processing. */
+		sub->dataChangeCallback(client, sub->subscriptionId, sub->context, dataChangeNotification);
+		return;
+    }
     for(size_t j = 0; j < dataChangeNotification->monitoredItemsSize; ++j) {
         UA_MonitoredItemNotification *min = &dataChangeNotification->monitoredItems[j];
 

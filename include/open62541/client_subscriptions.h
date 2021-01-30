@@ -42,6 +42,10 @@ typedef void (*UA_Client_StatusChangeNotificationCallback)
     (UA_Client *client, UA_UInt32 subId, void *subContext,
      UA_StatusChangeNotification *notification);
 
+typedef void (*UA_Client_RawDataChangeNotificationCallback)
+    (UA_Client *client, UA_UInt32 subId, void *subContext,
+     UA_DataChangeNotification *notification);
+
 /* Provides default values for a new subscription.
  *
  * RequestedPublishingInterval:  500.0 [ms]
@@ -113,6 +117,12 @@ UA_Client_Subscriptions_setPublishingMode(UA_Client *client,
         &response, &UA_TYPES[UA_TYPES_SETPUBLISHINGMODERESPONSE]);
     return response;
 }
+
+UA_StatusCode UA_EXPORT
+UA_Client_Subscriptions_setRawDataChangeCallback(UA_Client *client,
+    UA_UInt32 subscriptionId,
+    UA_Client_RawDataChangeNotificationCallback callback);
+
 
 /**
  * MonitoredItems
